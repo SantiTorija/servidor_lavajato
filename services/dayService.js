@@ -66,4 +66,4 @@ const findAndUpdate = async (date, slot) => {
   }
 }; */
 
-module.exports = { findOrCreate, findAndUpdate, findAndDestroySlot };
+module.exports = { findOrCreate, findAndUpdate };
