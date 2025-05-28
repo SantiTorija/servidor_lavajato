@@ -8,7 +8,11 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://cliente-lavajato.vercel.app",
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 
 routes(app);
