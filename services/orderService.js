@@ -28,15 +28,15 @@ const isOrder = async (id) => {
 const getOrdersByStatusAndEmail = async (status, email) => {
   try {
     const orders = await Order.findAll({ where: { phone: email } });
-    console.log(orders);
+
     if (!orders) return [];
     const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
     if (status === "Active") {
       return orders.filter((order) => {
         const cart = order.cart;
         if (cart.date) {
-          const orderDate = new Date(cart.date);
-          return orderDate > today;
+          return cart.date >= todayStr;
         }
         return false;
       });
@@ -45,8 +45,7 @@ const getOrdersByStatusAndEmail = async (status, email) => {
       return orders.filter((order) => {
         const cart = order.cart;
         if (cart.date) {
-          const orderDate = new Date(cart.date);
-          return orderDate < today;
+          return cart.date < todayStr;
         }
         return false;
       });

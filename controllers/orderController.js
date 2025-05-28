@@ -76,10 +76,8 @@ const orderController = {
 
   // DELETE /orders/:id - Eliminar orden
   async destroy(req, res) {
-    console.log(req.params);
-
+    findAndUpdate(req.params.date, req.params.slot);
     try {
-      findAndUpdate(req.params.date, req.params.slot);
       const deleted = await Order.destroy({
         where: { id: req.params.id },
       });

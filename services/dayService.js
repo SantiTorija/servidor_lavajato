@@ -24,7 +24,6 @@ const findOrCreate = async (date, slot) => {
     }
     return existingDay;
   } catch (error) {
-    console.log(error, "error");
     return error;
   }
 };
@@ -41,6 +40,7 @@ const findAndUpdate = async (date, slot) => {
       existingDay.slots_available = existingDay.slots_available.filter(
         (slots) => slots !== slot
       );
+
       existingDay.changed("slots_available", true); // Marca explícitamente el campo como modificado
       await existingDay.save();
     }
@@ -50,4 +50,20 @@ const findAndUpdate = async (date, slot) => {
   }
 };
 
-module.exports = { findOrCreate, findAndUpdate };
+/* const findAndDestroySlot = async (date, slot) => {
+  try {
+    const existingDay = await Day.findOne({ where: { date: date } });
+    if (existingDay) {
+      existingDay.slots_available = existingDay.slots_available.filter(
+        (s) => s !== slot
+      );
+      existingDay.changed("slots_available", true);
+      await existingDay.save();
+    }
+    return existingDay;
+  } catch (error) {
+    return error;
+  }
+}; */
+
+module.exports = { findOrCreate, findAndUpdate, findAndDestroySlot };
