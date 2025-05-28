@@ -9,13 +9,8 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT,
     host: process.env.DB_HOST,
     dialect: process.env.DB_CONNECTION,
+    //dialectModule: pg,
     logging: false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false, // para cert no verificado
-      },
-    },
   }
 );
 
