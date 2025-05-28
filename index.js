@@ -9,18 +9,19 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 
-const allowedOrigins = ["https://cliente-lavajato.vercel.app"];
+const allowedOrigins = ["https://cliente-lavajato.vercel.app", undefined];
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Bloqueado por CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Si usas cookies o autenticación
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.options("*", cors());
