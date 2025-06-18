@@ -30,7 +30,6 @@ const orderController = {
 
   // POST /orders - Crear nueva orden
   async store(req, res) {
-    console.log("entre");
     try {
       const { date, slot } = req.params;
 
@@ -40,17 +39,14 @@ const orderController = {
       // Buscar cliente por email
       const client = await Client.findOne({ where: { email: req.body.phone } });
       if (!client) {
-        console.log("entre 2");
         return res.status(400).json({ error: "Cliente no encontrado" });
       }
 
       // Crear la orden agregando el clientId
       const newOrder = await Order.create({ ...req.body, clientId: client.id });
-      console.log("entre 3");
-      console.log(newOrder, "newOrder");
 
       // Enviar email de confirmación
-      console.log(client.email);
+
       await confirmationEmail({
         to: client.email,
         subject: "Confirmación de Reserva",
