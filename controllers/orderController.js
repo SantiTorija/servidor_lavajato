@@ -44,7 +44,7 @@ const orderController = {
       }
 
       // Crear la orden agregando el clientId
-      const newOrder = await Order.create({ ...req.body, clientId: client.id });
+      const newOrder = await Order.create({ ...req.body, ClientId: client.id });
 
       // Enviar email de confirmación
 
