@@ -27,7 +27,7 @@ const isOrder = async (id) => {
 
 const getOrdersByStatusAndEmail = async (status, email) => {
   try {
-    const orders = await Order.findAll({ where: { phone: email } });
+    const orders = await Order.findAll({ where: { email: email } });
 
     if (!orders) return [];
     const today = new Date();
