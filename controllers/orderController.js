@@ -37,7 +37,9 @@ const orderController = {
       await findOrCreate(date, slot);
 
       // Buscar cliente por email
-      const client = await Client.findOne({ where: { email: req.body.email } });
+      const client = await Client.findOne({
+        where: { email: req.params.email },
+      });
 
       if (!client) {
         return res.status(400).json({ error: "Cliente no encontrado" });
