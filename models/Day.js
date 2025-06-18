@@ -1,7 +1,8 @@
-module.exports = (sequelize, Model, DataTypes) => {
-  class Day extends Model {}
+const { DataTypes } = require("sequelize");
 
-  Day.init(
+module.exports = (sequelize) => {
+  const Day = sequelize.define(
+    "Day",
     {
       id: {
         type: DataTypes.BIGINT,
@@ -19,9 +20,7 @@ module.exports = (sequelize, Model, DataTypes) => {
       },
     },
     {
-      sequelize,
-      modelName: "day",
-
+      tableName: "Days",
       indexes: [
         {
           unique: true,
@@ -30,6 +29,5 @@ module.exports = (sequelize, Model, DataTypes) => {
       ],
     }
   );
-
   return Day;
 };

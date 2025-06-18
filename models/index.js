@@ -29,10 +29,29 @@ const Client = require("./Client")(sequelize, Model, DataTypes);
 const Service = require("./Service")(sequelize, Model, DataTypes);
 const Order = require("./Order")(sequelize, Model, DataTypes);
 const Day = require("./Day")(sequelize, Model, DataTypes);
+const CarType = require("./CarType")(sequelize, Model, DataTypes);
+const ServicePrice = require("./ServicePrice")(sequelize, Model, DataTypes);
 
 // Associations
+// Cliente - Orden
 Order.belongsTo(Client);
 Client.hasMany(Order);
+
+// Servicio - Precio de Servicio
+Service.hasMany(ServicePrice);
+ServicePrice.belongsTo(Service);
+
+// Tipo de Carro - Precio de Servicio
+CarType.hasMany(ServicePrice);
+ServicePrice.belongsTo(CarType);
+
+// Orden - Servicio (uno a muchos)
+Order.belongsTo(Service);
+Service.hasMany(Order);
+
+// Orden - Tipo de Carro
+Order.belongsTo(CarType);
+CarType.hasMany(Order);
 
 module.exports = {
   sequelize,
@@ -42,4 +61,6 @@ module.exports = {
   Client,
   Order,
   Day,
+  CarType,
+  ServicePrice,
 };

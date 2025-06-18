@@ -1,9 +1,9 @@
+const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
 
-module.exports = (sequelize, Model, DataTypes) => {
-  class Admin extends Model {}
-
-  Admin.init(
+module.exports = (sequelize) => {
+  const Admin = sequelize.define(
+    "Admin",
     {
       id: {
         type: DataTypes.BIGINT,
@@ -13,44 +13,32 @@ module.exports = (sequelize, Model, DataTypes) => {
       firstname: {
         type: DataTypes.STRING(60),
         allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        validate: { notEmpty: true },
       },
       lastname: {
         type: DataTypes.STRING(60),
         allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        validate: { notEmpty: true },
       },
       email: {
         type: DataTypes.STRING(320),
         allowNull: false,
-        validate: {
-          notEmpty: true,
-          isLowercase: true,
-        },
+        validate: { notEmpty: true, isLowercase: true },
         unique: true,
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        validate: { notEmpty: true },
       },
       role: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        validate: { notEmpty: true },
       },
     },
     {
-      sequelize,
-      modelName: "admin",
+      tableName: "Admins",
       hooks: {
         beforeBulkCreate: async (users, options) => {
           for (const user of users) {
@@ -61,25 +49,15 @@ module.exports = (sequelize, Model, DataTypes) => {
           user.password = await bcrypt.hash(user.password, 10);
         },
       },
-
       defaultScope: {
-        attributes: {
-          exclude: ["password", "createdAt", "updatedAt"],
-        },
+        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
       },
       scopes: {
-        privateInfo: {
-          attributes: {},
-        },
+        privateInfo: { attributes: {} },
       },
-    },
+    }
   );
-
-  Admin.prototype.isValidPassword = async function (password) {
-    const admin = await Admin.scope("privateInfo").findByPk(this.id);
-    const valid = await bcrypt.compare(password, admin.password);
-    return valid;
-  };
-
+  // Métodos de instancia pueden agregarse aquí si se desea
+  // Admin.prototype.isValidPassword = async function (password) { ... }
   return Admin;
 };

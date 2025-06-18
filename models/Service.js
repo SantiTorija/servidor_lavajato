@@ -1,61 +1,26 @@
-const slugify = require("slugify");
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
 
-module.exports = (sequelize, Model, DataTypes) => {
-  class Service extends Model {}
-
-  Service.init(
+module.exports = (sequelize) => {
+  const Service = sequelize.define(
+    "Service",
     {
       id: {
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
       },
-      type: {
-        type: DataTypes.STRING(140),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      carType: {
-        type: DataTypes.STRING(140),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      price: {
-        type: DataTypes.DECIMAL,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      slug: {
+      name: {
         type: DataTypes.STRING,
+        unique: true,
+        allowNull: false,
       },
+      description: DataTypes.STRING,
     },
     {
-      sequelize,
-      modelName: "service",
-      hooks: {
-        beforeBulkCreate: async (services, options) => {
-          for (const service of services) {
-            service.slug = slugify(service.type, {
-              lower: true,
-              strict: true,
-            });
-          }
-        },
-        beforeCreate: async (service, options) => {
-          service.slug = slugify(service.type, {
-            lower: true,
-            strict: true,
-          });
-        },
-      },
+      tableName: "Services",
+      timestamps: true,
     }
   );
-
   return Service;
 };

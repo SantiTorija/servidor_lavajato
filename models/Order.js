@@ -1,11 +1,10 @@
+const { DataTypes } = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
-const { Op } = require("sequelize");
 //const findAndUpdate = require("../services/dayService");
 
-module.exports = (sequelize, Model, DataTypes) => {
-  class Order extends Model {}
-
-  Order.init(
+module.exports = (sequelize) => {
+  const Order = sequelize.define(
+    "Order",
     {
       id: {
         type: DataTypes.BIGINT,
@@ -30,13 +29,13 @@ module.exports = (sequelize, Model, DataTypes) => {
       },
     },
     {
-      sequelize,
-      modelName: "order",
+      tableName: "Orders",
+      timestamps: true,
       hooks: {
         beforeDestroy: async (order, options) => {
           try {
-            const date = order.cart[0].date;
-            const slot = order.cart[0].slot;
+            const date = order.cart[0]?.date;
+            const slot = order.cart[0]?.slot;
             //findAndUpdate(date, slot);
           } catch (error) {
             throw new Error(

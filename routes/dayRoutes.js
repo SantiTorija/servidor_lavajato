@@ -9,6 +9,8 @@ router.get("/", dayController.index);
 router.get("/availability/:year/:month", dayController.availability);
 
 router.get("/dayAvailability/:date", dayController.dayAvailability);
+// Endpoint para eventos de calendario (FullCalendar)
+router.get("/calendar-events", dayController.calendarEvents);
 
 // Obtener un slot por ID
 router.get("/:id", dayController.show);

@@ -1,5 +1,6 @@
 const { Day } = require("../models");
 const { Op } = require("sequelize");
+const dayService = require("../services/dayService");
 
 const dayController = {
   // Obtener todos los slots
@@ -122,6 +123,26 @@ const dayController = {
       res.json({ message: "Slot eliminado correctamente." });
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar el slot." });
+    }
+  },
+
+  // Obtener eventos para FullCalendar
+  async calendarEvents(req, res) {
+    console.log(req.query);
+    try {
+      const { start, end, day, month, week } = req.query;
+      const events = await dayService.getCalendarEvents({
+        start,
+        end,
+        day,
+        month,
+        week,
+      });
+      res.json(events);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Error al obtener eventos del calendario." });
     }
   },
 };
