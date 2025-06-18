@@ -46,11 +46,11 @@ const orderController = {
       }
 
       // Crear la orden agregando el clientId
-      const newOrder = await Order.create({ ...req.body, clientId: client.id });
+      const newOrder = await Order.create({ ...req.body, ClientId: client.id });
 
       // Enviar email de confirmación
 
-      await confirmationEmail({
+      /* await confirmationEmail({
         to: client.email,
         subject: "Confirmación de Reserva",
         html: `<h1>¡Gracias por tu reserva!</h1>
@@ -59,7 +59,7 @@ const orderController = {
         date,
         time: slot,
         total: newOrder.total,
-      });
+      }); */
 
       res.status(201).json(newOrder);
     } catch (error) {
