@@ -20,7 +20,7 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "day",
+      tableName: "days",
       indexes: [
         {
           unique: true,

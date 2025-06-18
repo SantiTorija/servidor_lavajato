@@ -35,7 +35,7 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "client",
+      tableName: "clients",
       defaultScope: {
         attributes: { exclude: ["createdAt", "updatedAt"] },
       },
