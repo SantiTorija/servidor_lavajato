@@ -29,7 +29,7 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "Orders",
+      tableName: "order",
       timestamps: true,
       hooks: {
         beforeDestroy: async (order, options) => {

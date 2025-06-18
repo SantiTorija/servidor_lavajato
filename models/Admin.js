@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "Admins",
+      tableName: "admin",
       hooks: {
         beforeBulkCreate: async (users, options) => {
           for (const user of users) {

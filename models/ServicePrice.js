@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "ServicePrices",
+      tableName: "serviceprice",
       timestamps: true,
       indexes: [{ unique: true, fields: ["serviceId", "carTypeId"] }],
     }
