@@ -50,7 +50,7 @@ module.exports = (sequelize) => {
         },
       },
       defaultScope: {
-        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
       },
       scopes: {
         privateInfo: { attributes: {} },

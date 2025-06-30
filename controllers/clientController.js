@@ -1,5 +1,9 @@
 const { Client } = require("../models");
-const { createClient, clientExists } = require("../services/clientService");
+const {
+  createClient,
+  clientExists,
+  updateClient,
+} = require("../services/clientService");
 
 async function index(req, res) {
   try {
@@ -12,9 +16,12 @@ async function index(req, res) {
 }
 
 async function show(req, res) {
+  console.log("entre");
+
   try {
     //si hay un clinte lo devuelve, sino devuele false
     const isClient = await clientExists(req.params.email);
+    console.log(isClient);
     return res.json(isClient);
   } catch (error) {
     console.log(error);
@@ -34,17 +41,47 @@ async function store(req, res) {
 
 async function update(req, res) {
   try {
-    await Admin.update(req.body, { where: { id: req.params.id } });
-    return res.json({ message: "updated" });
+    const clientId = req.params.id;
+
+    // Validar que el ID sea un número válido
+    if (!clientId || isNaN(clientId)) {
+      return res.status(400).json({
+        message: "ID de cliente inválido",
+      });
+    }
+
+    // Validar que hay datos para actualizar
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        message: "No se proporcionaron datos para actualizar",
+      });
+    }
+
+    const updatedClient = await updateClient(clientId, req.body);
+
+    return res.json({
+      message: "Cliente actualizado exitosamente",
+      client: updatedClient,
+    });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: error.message });
+    console.log("Error en update:", error);
+
+    // Manejar errores específicos
+    if (error.message.includes("Cliente no encontrado")) {
+      return res.status(404).json({
+        message: "Cliente no encontrado",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Error interno del servidor al actualizar cliente",
+    });
   }
 }
 
 async function destroy(req, res) {
   try {
-    await Admin.destroy({ where: { id: req.params.id } });
+    await Client.destroy({ where: { id: req.params.id } });
     return res.json({ message: "destroyed" });
   } catch (error) {
     console.log(error);

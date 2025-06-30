@@ -1,20 +1,24 @@
+const express = require("express");
 const adminRoutes = require("./adminRoutes");
-const logRoutes = require("./logRoutes");
-const dayRoutes = require("./dayRoutes");
-const orderRoutes = require("./orderRoutes");
-const serviceRoutes = require("./serviceRoutes");
-const clientRoutes = require("./clientRoutes");
 const carTypeRoutes = require("./carTypeRoutes");
+const clientRoutes = require("./clientRoutes");
+const dayRoutes = require("./dayRoutes");
+const logRoutes = require("./logRoutes");
+const orderRoutes = require("./orderRoutes");
 const servicePriceRoutes = require("./servicePriceRoutes");
+const serviceRoutes = require("./serviceRoutes");
+const authRoutes = require("./authRoutes");
+const adminSeederRoutes = require("./adminSeeder");
 
 module.exports = (app) => {
-  //app.use(authRoutes);
-  app.use("/admins", adminRoutes);
-  app.use("/logs", logRoutes);
-  app.use("/day", dayRoutes);
-  app.use("/order", orderRoutes);
-  app.use("/client", clientRoutes);
+  app.use("/admin", authRoutes);
+  //app.use("/admin", adminRoutes);
   app.use("/car-type", carTypeRoutes);
+  app.use("/client", clientRoutes);
+  app.use("/day", dayRoutes);
+  app.use("/log", logRoutes);
+  app.use("/order", orderRoutes);
   app.use("/service-price", servicePriceRoutes);
   app.use("/service", serviceRoutes);
+  app.use("/seed-admin", adminSeederRoutes);
 };

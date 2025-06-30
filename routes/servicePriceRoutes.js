@@ -3,6 +3,10 @@ const router = express.Router();
 const servicePriceController = require("../controllers/servicePriceController");
 
 router.get("/", servicePriceController.index);
+router.get(
+  "/car-type-name/:carTypeName",
+  servicePriceController.getByCarTypeName
+);
 router.get("/car-type/:carTypeId", servicePriceController.getByCarType);
 router.get("/:id", servicePriceController.show);
 router.post("/", servicePriceController.store);
