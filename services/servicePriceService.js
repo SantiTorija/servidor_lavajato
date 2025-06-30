@@ -14,7 +14,7 @@ async function getById(id) {
 
 async function getByCarTypeId(carTypeId) {
   return ServicePrice.findAll({
-    where: { carTypeId: carTypeId },
+    where: { CarTypeId: carTypeId },
     include: [{ model: Service }],
   });
 }
