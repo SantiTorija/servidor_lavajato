@@ -1,9 +1,9 @@
-const { Service } = require("../models");
+const serviceService = require("../services/servicesSevice");
 const { Op } = require("sequelize");
 
 async function index(req, res) {
   try {
-    const services = await Service.findAll();
+    const services = await serviceService.findAll();
     return res.json(services);
   } catch (error) {
     console.log(error);
@@ -49,7 +49,7 @@ async function store(req, res) {
 
 async function update(req, res) {
   try {
-    await Admin.update(req.body, { where: { id: req.params.id } });
+    await serviceService.update(req.params.id, req.body);
     return res.json({ message: "updated" });
   } catch (error) {
     console.log(error);

@@ -68,23 +68,18 @@ const findAndUpdate = async (date, slot) => {
 }; */
 
 function parseHourTo24(str) {
-  // Soporta "8 AM", "10 PM", "13", "15", etc.
-  const [hourStr, period] = str.split(" ");
-  let h = parseInt(hourStr, 10);
+  // Soporta "8:00 a.m.", "1:00 p.m.", etc.
+  const [time, period] = str.split(" ");
+  let [hour, minute] = time.split(":").map(Number);
 
-  if (!period) {
-    // Si no hay AM/PM, asume 24hs
-    return h.toString().padStart(2, "0") + ":00:00";
-  }
+  let p = period?.toLowerCase();
+  if (p === "p.m." && hour !== 12) hour += 12;
+  if (p === "a.m." && hour === 12) hour = 0;
+  if (!minute) minute = 0;
 
-  // Si la hora es mayor a 12, ignora el periodo y asume 24hs
-  if (h > 12) {
-    return h.toString().padStart(2, "0") + ":00:00";
-  }
-
-  if (period === "PM" && h !== 12) h += 12;
-  if (period === "AM" && h === 12) h = 0;
-  return h.toString().padStart(2, "0") + ":00:00";
+  return `${hour.toString().padStart(2, "0")}:${minute
+    .toString()
+    .padStart(2, "0")}:00`;
 }
 
 async function getCalendarEvents({ start, end, day, month, week }) {
@@ -94,24 +89,29 @@ async function getCalendarEvents({ start, end, day, month, week }) {
   } else if (day) {
     where.date = day;
   } else if (month) {
-    // month: YYYY-MM
     where.date = { [Op.like]: `${month}-%` };
   } else if (week) {
-    // week: YYYY-MM-DD,YYYY-MM-DD
     const [weekStart, weekEnd] = week.split(",");
     where.date = { [Op.between]: [weekStart, weekEnd] };
   }
   const days = await Day.findAll({ where });
   const events = [];
+  const DURATION_HOURS = 2;
+
   days.forEach((day) => {
     (day.slots_available || []).forEach((slot, idx) => {
-      // slot: "8 AM - 10 AM"
-      const [from, , to] = slot.split(" ");
-      const startTime = parseHourTo24(from + " " + slot.split(" ")[1]);
-      const endTime = parseHourTo24(to + " " + slot.split(" ")[3]);
+      const startTime = parseHourTo24(slot);
+      // Calcular end sumando DURATION_HOURS
+      let [h, m] = startTime.split(":").map(Number);
+      h += DURATION_HOURS;
+      if (h >= 24) h -= 24;
+      const endTime = `${h.toString().padStart(2, "0")}:${m
+        .toString()
+        .padStart(2, "0")}:00`;
+
       events.push({
         id: `${day.id}-${idx}`,
-        title: `${slot}`,
+        title: `Turno ${slot}`,
         start: `${day.date}T${startTime}`,
         end: `${day.date}T${endTime}`,
       });
