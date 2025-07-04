@@ -58,13 +58,13 @@ const orderController = {
 
       // Enviar email de confirmación
 
-      await confirmationEmail({
+      /*   await confirmationEmail({
         to: client.email,
         date,
         time: slot,
         total: newOrder.total,
       });
-
+ */
       res.status(201).json(newOrder);
     } catch (error) {
       console.log("orderController.store: error general", error);

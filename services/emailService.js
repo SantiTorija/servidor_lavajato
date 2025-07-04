@@ -4,7 +4,7 @@ const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Función para enviar email básico
-const confirmationEmail = async ({ to, date, time, total }) => {
+/* const confirmationEmail = async ({ to, date, time, total }) => {
   const subject = "Confirmación de Reserva";
   const html = `<h1>¡Tu reserva ya esta lista!</h1>
     <p>Datos de la reserva:</p>
@@ -38,7 +38,7 @@ const confirmationEmail = async ({ to, date, time, total }) => {
     );
     throw new Error("No se pudo enviar el correo.");
   }
-};
+}; */
 
 module.exports = {
   confirmationEmail,
