@@ -34,7 +34,11 @@ const orderController = {
       const { date, slot } = req.params;
 
       //si no hay un dia con esa fecha lo crea, sino lo edita para agregar el slot
-      await findOrCreate(date, slot);
+      try {
+        await findOrCreate(date, slot);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
 
       // Buscar cliente por email
       const client = await Client.findOne({

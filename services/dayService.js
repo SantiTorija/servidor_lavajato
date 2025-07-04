@@ -1,31 +1,46 @@
-const { Day } = require("../models");
+const { sequelize, Day } = require("../models");
 const { Op } = require("sequelize");
 
 const findOrCreate = async (date, slot) => {
+  const t = await sequelize.transaction();
   try {
-    console.log(date, slot);
-
-    const existingDay = await Day.findOne({
-      where: { date: date },
+    let day = await Day.findOne({
+      where: { date },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
-    console.log(existingDay);
-    if (!existingDay) {
-      // Actualizar usando Sequelize correctamente
-      await Day.create({
-        date: date,
-        slots_available: [slot],
-      });
+    if (!day) {
+      try {
+        day = await Day.create(
+          { date, slots_available: [slot] },
+          { transaction: t }
+        );
+      } catch (err) {
+        if (err.name === "SequelizeUniqueConstraintError") {
+          day = await Day.findOne({
+            where: { date },
+            transaction: t,
+            lock: t.LOCK.UPDATE,
+          });
+        } else {
+          throw err;
+        }
+      }
     }
-
-    if (existingDay) {
-      // Actualizar usando Sequelize correctamente
-      existingDay.slots_available.push(slot);
-      existingDay.changed("slots_available", true); // Marca explícitamente el campo como modificado
-      await existingDay.save();
+    if (day) {
+      if (day.slots_available.includes(slot)) {
+        await t.rollback();
+        throw new Error("el slot ya fue reservado");
+      }
+      day.slots_available.push(slot);
+      day.changed("slots_available", true);
+      await day.save({ transaction: t });
     }
-    return existingDay;
+    await t.commit();
+    return day;
   } catch (error) {
-    return error;
+    await t.rollback();
+    throw error;
   }
 };
 
