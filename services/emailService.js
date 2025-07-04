@@ -14,7 +14,7 @@ const confirmationEmail = async ({ to, date, time, total }) => {
     <br/>
     <p><strong>Fecha:</strong> ${date}</p>
     <p><strong>Hora:</strong> ${time}</p>
-    <p><strong>Total:</strong> ${total}</p>
+    <p><strong>Total:</strong> ${total} <strong>A pagar en el local</strong></p>
   `;
 
   const msg = {
