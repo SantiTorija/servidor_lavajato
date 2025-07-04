@@ -43,7 +43,7 @@ module.exports = (sequelize) => {
             );
           }
         },
-        beforeCreate: async (order, options) => {
+        /*  beforeCreate: async (order, options) => {
           // Importar aquí para evitar dependencias circulares
           const { Day } = require("./index");
           // cart es un objeto
@@ -59,7 +59,7 @@ module.exports = (sequelize) => {
           if (!day.slots_available.includes(slot)) {
             throw new Error("el slot ya fue reservado");
           }
-        },
+        }, */
       },
     }
   );
