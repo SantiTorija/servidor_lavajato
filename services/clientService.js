@@ -1,4 +1,5 @@
 const { Client, CarType } = require("../models");
+const { Op } = require("sequelize");
 
 const createClient = async (clientData) => {
   // Aquí podrías validar datos, encriptar contraseñas, etc.
@@ -69,4 +70,54 @@ const updateClient = async (clientId, updateData) => {
   }
 };
 
-module.exports = { createClient, clientExists, updateClient };
+const getNewClientsByMonth = async () => {
+  const now = new Date();
+  const months = [];
+  for (let i = 4; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      year: date.getFullYear(),
+      month: date.getMonth() + 1, // 1-indexed
+      label: date.toLocaleString("default", {
+        month: "short",
+        year: "2-digit",
+      }),
+    });
+  }
+
+  // Buscar clientes creados en los últimos 5 meses
+  const fromDate = new Date(now.getFullYear(), now.getMonth() - 4, 1);
+  const clients = await Client.findAll({
+    where: {
+      createdAt: {
+        [Op.gte]: fromDate,
+      },
+    },
+    attributes: ["id", "createdAt"],
+    raw: true,
+  });
+
+  // Contar por mes
+  const result = {};
+  months.forEach(({ year, month, label }) => {
+    result[label] = 0;
+  });
+  clients.forEach((client) => {
+    const date = new Date(client.createdAt);
+    const label = date.toLocaleString("default", {
+      month: "short",
+      year: "2-digit",
+    });
+    if (result[label] !== undefined) {
+      result[label]++;
+    }
+  });
+  return result;
+};
+
+module.exports = {
+  createClient,
+  clientExists,
+  updateClient,
+  getNewClientsByMonth,
+};

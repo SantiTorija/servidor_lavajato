@@ -14,11 +14,12 @@ async function loginUser(email, password) {
   if (!user) throw new Error("Credenciales inválidas");
 
   const valid = await bcrypt.compare(password, user.password);
-  console.log(valid);
+
   if (!valid) throw new Error("Credenciales inválidas");
 
   // Solo datos seguros
   const userData = {
+    name: user.firstname + " " + user.lastname,
     id: user.id,
     role: user.role || "admin",
     email: user.email,

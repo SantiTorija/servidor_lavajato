@@ -6,7 +6,7 @@ const authService = require("../services/authService");
  */
 async function login(req, res) {
   const { email, password } = req.body;
-  console.log(req.body);
+
   try {
     const { user, token } = await authService.loginUser(email, password);
 

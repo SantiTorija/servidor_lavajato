@@ -43,6 +43,23 @@ module.exports = (sequelize) => {
             );
           }
         },
+        beforeCreate: async (order, options) => {
+          // Importar aquí para evitar dependencias circulares
+          const { Day } = require("./index");
+          // cart es un objeto
+          const date = order.cart?.date;
+          const slot = order.cart?.slot;
+          if (!date || !slot) {
+            throw new Error("Faltan datos de fecha o slot en la orden");
+          }
+          // Buscar el día correspondiente
+          const day = await Day.findOne({ where: { date } });
+
+          // Verificar si el slot ya está reservado (no está en slots_available)
+          if (!day.slots_available.includes(slot)) {
+            throw new Error("el slot ya fue reservado");
+          }
+        },
       },
     }
   );
