@@ -60,10 +60,6 @@ const orderController = {
 
       await confirmationEmail({
         to: client.email,
-        subject: "Confirmación de Reserva",
-        html: `<h1>¡Gracias por tu reserva!</h1>
-               <p>Tu reserva ha sido confirmada para el día ${date} a las ${slot}.</p>
-               <p>Por favor ten en cuenta que tenemos un margen de 30 minutos de consideración, luego de ese plazo perderías tu turno.</p>`,
         date,
         time: slot,
         total: newOrder.total,
