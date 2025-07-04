@@ -62,7 +62,7 @@ const orderController = {
         to: client.email,
         date,
         time: slot,
-        total: newOrder.total,
+        total: newOrder.cart.total,
       });
 
       res.status(201).json(newOrder);
