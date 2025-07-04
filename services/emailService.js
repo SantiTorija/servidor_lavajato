@@ -8,12 +8,13 @@ const confirmationEmail = async ({ to, date, time, total }) => {
   const subject = "Confirmación de reserva - Lavajato";
   const text = `¡Hola! Tu reserva ha sido confirmada. Por favor, ten en cuenta que tenemos un margen de 30 minutos de consideración, luego de ese plazo perderías tu turno. Fecha: ${date}, hora: ${time}, total: ${total}`;
   const html = `
-    <h2>¡Reserva confirmada!</h2>
+    <h2><strong>¡Reserva confirmada!</strong></h2>
     <p>Hola, tu reserva ha sido confirmada.</p>
+    <p>Atención: Por favor, ten en cuenta que tenemos un margen de 30 minutos de consideración. Luego de ese plazo perderías tu turno.</p>
+    <br/>
     <p><strong>Fecha:</strong> ${date}</p>
     <p><strong>Hora:</strong> ${time}</p>
     <p><strong>Total:</strong> ${total}</p>
-    <p>Por favor, ten en cuenta que tenemos un margen de 30 minutos de consideración. Luego de ese plazo perderías tu turno.</p>
   `;
 
   const msg = {
