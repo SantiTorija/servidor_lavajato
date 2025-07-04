@@ -32,12 +32,16 @@ const orderController = {
   async store(req, res) {
     try {
       const { date, slot } = req.params;
+      console.log("orderController.store: params", date, slot, req.body);
 
       //si no hay un dia con esa fecha lo crea, sino lo edita para agregar el slot
-      try {
-        await findOrCreate(date, slot);
-      } catch (error) {
-        return res.status(400).json({ error: error.message });
+      const result = await findOrCreate(date, slot);
+      if (result && result.error) {
+        console.log(
+          "orderController.store: error en findOrCreate",
+          result.error
+        );
+        return res.status(400).json({ error: result.error });
       }
 
       // Buscar cliente por email
@@ -67,7 +71,7 @@ const orderController = {
 
       res.status(201).json(newOrder);
     } catch (error) {
-      console.log(error, "error");
+      console.log("orderController.store: error general", error);
       res.status(400).json({ error: error.message });
     }
   },

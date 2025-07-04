@@ -4,17 +4,22 @@ const { Op } = require("sequelize");
 const findOrCreate = async (date, slot) => {
   const t = await sequelize.transaction();
   try {
+    console.log("findOrCreate: buscando día", date, slot);
     let day = await Day.findOne({
       where: { date },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
+    console.log("findOrCreate: resultado búsqueda", day);
     if (!day) {
       try {
         day = await Day.create(
           { date, slots_available: [slot] },
           { transaction: t }
         );
+        console.log("findOrCreate: día creado", day);
+        await t.commit();
+        return day;
       } catch (err) {
         if (err.name === "SequelizeUniqueConstraintError") {
           day = await Day.findOne({
@@ -22,24 +27,45 @@ const findOrCreate = async (date, slot) => {
             transaction: t,
             lock: t.LOCK.UPDATE,
           });
+          console.log("findOrCreate: día encontrado tras error unique", day);
+          // Aquí sigue el flujo normal para chequeo de slot
         } else {
           throw err;
         }
       }
     }
-    if (day) {
-      if (day.slots_available.includes(slot)) {
-        await t.rollback();
-        throw new Error("el slot ya fue reservado");
-      }
-      day.slots_available.push(slot);
-      day.changed("slots_available", true);
-      await day.save({ transaction: t });
+    // Solo si el día ya existía:
+    console.log("ANTES DEL PUSH:", day.slots_available);
+    if (day.slots_available.includes(slot)) {
+      console.log("findOrCreate: slot ya reservado");
+      await t.rollback();
+      return { error: "el slot ya fue reservado" };
     }
+    day.slots_available.push(slot);
+    console.log("DESPUÉS DEL PUSH:", day.slots_available);
+    day.changed("slots_available", true);
+    await day.save({ transaction: t });
+
+    // Releer el registro después de guardar
+    const dayAfter = await Day.findOne({
+      where: { date },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+    console.log("DESPUÉS DEL SAVE Y REREAD:", dayAfter.slots_available);
+    const count = dayAfter.slots_available.filter((s) => s === slot).length;
+    console.log("COUNT DEL SLOT:", count);
+    if (count > 1) {
+      console.log("findOrCreate: condición de carrera detectada, rollback");
+      await t.rollback();
+      return { error: "el slot ya fue reservado" };
+    }
+    console.log("findOrCreate: slot agregado y día guardado");
     await t.commit();
     return day;
   } catch (error) {
     await t.rollback();
+    console.log("findOrCreate: error", error);
     throw error;
   }
 };
