@@ -1,4 +1,11 @@
-const { sequelize, Day } = require("../models");
+const {
+  sequelize,
+  Day,
+  Order,
+  Client,
+  Service,
+  CarType,
+} = require("../models");
 const { Op } = require("sequelize");
 
 const findOrCreate = async (date, slot) => {
@@ -139,8 +146,50 @@ async function getCalendarEvents({ start, end, day, month, week }) {
   const events = [];
   const DURATION_HOURS = 2;
 
-  days.forEach((day) => {
-    (day.slots_available || []).forEach((slot, idx) => {
+  // Crear un array de promesas para buscar órdenes correspondientes
+  const orderPromises = days.map(async (day) => {
+    const dayOrders = [];
+    for (const slot of day.slots_available || []) {
+      try {
+        const order = await Order.findOne({
+          where: {
+            cart: {
+              slot: slot,
+              date: day.date,
+            },
+          },
+          include: [
+            {
+              model: Client,
+              attributes: ["firstname", "lastname", "car"],
+            },
+            {
+              model: Service,
+              attributes: ["name"],
+            },
+            {
+              model: CarType,
+              attributes: ["name"],
+            },
+          ],
+        });
+        dayOrders.push({ slot, order });
+      } catch (error) {
+        console.error(
+          `Error buscando orden para ${day.date} - ${slot}:`,
+          error
+        );
+        dayOrders.push({ slot, order: null });
+      }
+    }
+    return { day, dayOrders };
+  });
+
+  // Ejecutar todas las búsquedas de órdenes
+  const daysWithOrders = await Promise.all(orderPromises);
+
+  daysWithOrders.forEach(({ day, dayOrders }) => {
+    dayOrders.forEach(({ slot, order }, idx) => {
       const startTime = parseHourTo24(slot);
       // Calcular end sumando DURATION_HOURS
       let [h, m] = startTime.split(":").map(Number);
@@ -150,14 +199,41 @@ async function getCalendarEvents({ start, end, day, month, week }) {
         .toString()
         .padStart(2, "0")}:00`;
 
-      events.push({
+      // Crear el evento base
+      const event = {
         id: `${day.id}-${idx}`,
         title: `Turno ${slot}`,
         start: `${day.date}T${startTime}`,
         end: `${day.date}T${endTime}`,
-      });
+      };
+
+      // Si hay una orden correspondiente, agregar información del cliente y vehículo
+      if (order) {
+        const cliente = {
+          nombre: order.Client.firstname,
+          apellido: order.Client.lastname,
+        };
+        const vehiculo = {
+          marca: order.Client.car.marca,
+          modelo: order.Client.car.modelo,
+        };
+        const servicio = order.Service.name;
+        const tipoAuto = order.CarType.name;
+        const total = order.cart.total;
+
+        event.title = `${cliente.nombre} ${cliente.apellido}`;
+        event.cliente = cliente;
+        event.vehiculo = vehiculo;
+        event.servicio = servicio;
+        event.tipoAuto = tipoAuto;
+        event.total = total;
+        event.orderId = order.id;
+      }
+
+      events.push(event);
     });
   });
+
   return events;
 }
 
