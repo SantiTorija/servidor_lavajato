@@ -1,7 +1,7 @@
 const { Service } = require("../models");
 
 async function findAll() {
-  return await Service.findAll();
+  return await Service.findAll({ order: [["id", "ASC"]] });
 }
 
 async function findById(id) {
