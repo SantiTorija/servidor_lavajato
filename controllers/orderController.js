@@ -4,7 +4,11 @@ const {
   getOrdersByStatusAndEmail,
 } = require("../services/orderService");
 const { findOrCreate, findAndUpdate } = require("../services/dayService");
-const { confirmationEmail } = require("../services/emailService");
+const {
+  confirmationEmail,
+  cancellationEmail,
+  modificationEmail,
+} = require("../services/emailService");
 
 const orderController = {
   // GET /orders - Obtener todas las órdenes
@@ -86,6 +90,23 @@ const orderController = {
       }
 
       const updatedOrder = await Order.findByPk(req.params.id);
+
+      // Enviar email de modificación
+      try {
+        await modificationEmail({
+          to: updatedOrder.email,
+          oldDate: req.query.dateToEdit,
+          oldTime: req.query.slotToEdit,
+          newDate: req.body.cart.date,
+          newTime: req.body.cart.slot,
+          total: req.body.cart.total,
+        });
+        console.log("Email de modificación enviado exitosamente");
+      } catch (emailError) {
+        console.error("Error enviando email de modificación:", emailError);
+        // No fallar la operación principal si falla el email
+      }
+
       res.status(200).json(updatedOrder);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -94,14 +115,37 @@ const orderController = {
 
   // DELETE /orders/:id - Eliminar orden
   async destroy(req, res) {
-    findAndUpdate(req.params.date, req.params.slot);
     try {
+      // Obtener datos de la orden antes de eliminar para el email
+      const orderToDelete = await Order.findByPk(req.params.id);
+      if (!orderToDelete) {
+        return res.status(404).json({ message: "Orden no encontrada" });
+      }
+
+      // Eliminar la orden
       const deleted = await Order.destroy({
         where: { id: req.params.id },
       });
 
       if (!deleted) {
         return res.status(404).json({ message: "Orden no encontrada" });
+      }
+
+      // Liberar el slot
+      await findAndUpdate(req.params.date, req.params.slot);
+
+      // Enviar email de cancelación
+      try {
+        await cancellationEmail({
+          to: orderToDelete.email,
+          date: req.params.date,
+          time: req.params.slot,
+          total: orderToDelete.cart.total,
+        });
+        console.log("Email de cancelación enviado exitosamente");
+      } catch (emailError) {
+        console.error("Error enviando email de cancelación:", emailError);
+        // No fallar la operación principal si falla el email
       }
 
       res.status(204).json(deleted);
