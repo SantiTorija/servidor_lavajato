@@ -16,6 +16,7 @@ async function getByCarTypeId(carTypeId) {
   return ServicePrice.findAll({
     where: { CarTypeId: carTypeId },
     include: [{ model: Service }],
+    order: [[{ model: Service }, "id", "ASC"]],
   });
 }
 
@@ -32,6 +33,7 @@ async function getPricesByCarTypeName(carTypeName) {
         required: true,
       },
     ],
+    order: [[{ model: Service }, "id", "ASC"]],
   });
 }
 
