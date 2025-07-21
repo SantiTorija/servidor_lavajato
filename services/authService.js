@@ -17,12 +17,13 @@ async function loginUser(email, password) {
 
   if (!valid) throw new Error("Credenciales inválidas");
 
-  // Solo datos seguros
+  // Armar manualmente el objeto user sin password
   const userData = {
-    name: user.firstname + " " + user.lastname,
     id: user.id,
-    role: user.role || "admin",
+    firstname: user.firstname,
+    lastname: user.lastname,
     email: user.email,
+    role: user.role,
   };
 
   const token = jwt.sign(
