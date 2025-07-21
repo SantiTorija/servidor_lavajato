@@ -12,6 +12,12 @@ router.get("/dayAvailability/:date", dayController.dayAvailability);
 // Endpoint para eventos de calendario (FullCalendar)
 router.get("/calendar-events", dayController.calendarEvents);
 
+// Agregar slot a un día específico
+router.post("/add-slot", dayController.addSlot);
+
+// Eliminar slot de un día específico
+router.post("/remove-slot", dayController.removeSlot);
+
 // Obtener un slot por ID
 router.get("/:id", dayController.show);
 

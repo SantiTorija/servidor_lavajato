@@ -126,6 +126,55 @@ const dayController = {
     }
   },
 
+  // Agregar slot a un día específico
+  async addSlot(req, res) {
+    try {
+      const { date, slot } = req.body;
+
+      if (!date || !slot) {
+        return res.status(400).json({
+          error: "Se requieren los parámetros 'date' y 'slot'",
+        });
+      }
+
+      const result = await dayService.addSlotToDay(date, slot);
+      res.json({
+        message: "Slot agregado correctamente",
+        day: result,
+      });
+    } catch (error) {
+      console.error("Error al agregar slot:", error);
+      res.status(500).json({
+        error: "Error al agregar slot al día",
+      });
+    }
+  },
+
+  // Eliminar slot de un día específico
+  async removeSlot(req, res) {
+    try {
+      const { date, slot } = req.body;
+      if (!date || !slot) {
+        return res
+          .status(400)
+          .json({ error: "Se requieren los parámetros 'date' y 'slot'" });
+      }
+      const result = await dayService.removeSlotFromDay(date, slot);
+      if (!result) {
+        return res.status(404).json({ error: "Día no encontrado" });
+      }
+      res.json({
+        message: "Slot marcado como disponible exitosamente",
+        day: result,
+      });
+    } catch (error) {
+      console.error("Error al eliminar slot:", error);
+      res
+        .status(500)
+        .json({ error: "Error al marcar el slot como disponible" });
+    }
+  },
+
   // Obtener eventos para FullCalendar
   async calendarEvents(req, res) {
     console.log(req.query);

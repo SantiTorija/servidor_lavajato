@@ -161,7 +161,7 @@ async function getCalendarEvents({ start, end, day, month, week }) {
           include: [
             {
               model: Client,
-              attributes: ["firstname", "lastname", "car"],
+              attributes: ["firstname", "lastname", "phone", "car"],
             },
             {
               model: Service,
@@ -212,6 +212,7 @@ async function getCalendarEvents({ start, end, day, month, week }) {
         const cliente = {
           nombre: order.Client.firstname,
           apellido: order.Client.lastname,
+          phone: order.Client.phone,
         };
         const vehiculo = {
           marca: order.Client.car.marca,
@@ -228,6 +229,10 @@ async function getCalendarEvents({ start, end, day, month, week }) {
         event.tipoAuto = tipoAuto;
         event.total = total;
         event.orderId = order.id;
+      } else {
+        // Si no hay orden asociada, es un slot reservado por admin
+        event.admin_created = true;
+        event.title = "Reservado por Admin";
       }
 
       events.push(event);
@@ -237,4 +242,56 @@ async function getCalendarEvents({ start, end, day, month, week }) {
   return events;
 }
 
-module.exports = { findOrCreate, findAndUpdate, getCalendarEvents };
+async function addSlotToDay(date, slot) {
+  try {
+    // Buscar si existe un día con la fecha especificada
+    let day = await Day.findOne({
+      where: { date: date },
+    });
+
+    if (!day) {
+      // Si no existe, crear el día con el slot
+      day = await Day.create({
+        date: date,
+        slots_available: [slot],
+      });
+      console.log(`Día creado para ${date} con slot ${slot}`);
+    } else {
+      // Si existe, agregar el slot al array existente
+      if (!day.slots_available.includes(slot)) {
+        day.slots_available.push(slot);
+        day.changed("slots_available", true);
+        await day.save();
+        console.log(`Slot ${slot} agregado al día ${date}`);
+      } else {
+        console.log(`El slot ${slot} ya existe para el día ${date}`);
+      }
+    }
+
+    return day;
+  } catch (error) {
+    console.error("Error en addSlotToDay:", error);
+    throw error;
+  }
+}
+
+async function removeSlotFromDay(date, slot) {
+  try {
+    const day = await Day.findOne({ where: { date } });
+    if (!day) return null;
+    day.slots_available = day.slots_available.filter((s) => s !== slot);
+    day.changed("slots_available", true);
+    await day.save();
+    return day;
+  } catch (error) {
+    throw error;
+  }
+}
+
+module.exports = {
+  findOrCreate,
+  findAndUpdate,
+  getCalendarEvents,
+  addSlotToDay,
+  removeSlotFromDay,
+};
