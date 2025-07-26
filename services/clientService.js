@@ -1,29 +1,34 @@
-const { Client, CarType } = require("../models");
+const { Client, Order } = require("../models");
 const { Op } = require("sequelize");
-
-const createClient = async (clientData) => {
-  // Aquí podrías validar datos, encriptar contraseñas, etc.
-
-  const client = await Client.create({
-    firstname: clientData.firstname,
-    lastname: clientData.lastname,
-    email: clientData.email,
-    phone: clientData.phone,
-    car: {
-      marca: clientData.marca,
-      modelo: clientData.modelo,
-      carType: clientData.carType,
-      carTypeId: clientData.carTypeId,
-    },
-  });
-  return client;
-};
 
 const clientExists = async (email) => {
   const client = await Client.findOne({ where: { email: email.trim() } });
 
   if (!client) return false;
-  return client;
+
+  // Buscar todas las órdenes asociadas al cliente
+  const allOrders = await Order.findAll({
+    where: {
+      ClientId: client.id,
+    },
+  });
+
+  // Filtrar órdenes con fecha futura o igual a hoy (cart.date >= today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Ignorar la hora
+  const futureOrdersFiltered = allOrders.filter((order) => {
+    const orderDate = order.cart?.date;
+    if (!orderDate) return false;
+    const orderDateObj = new Date(orderDate);
+    orderDateObj.setHours(0, 0, 0, 0);
+    return orderDateObj >= today;
+  });
+
+  return {
+    ...client.toJSON(),
+    futureOrders: futureOrdersFiltered.length > 0,
+    orders: futureOrdersFiltered,
+  };
 };
 
 const updateClient = async (clientId, updateData) => {
@@ -116,7 +121,6 @@ const getNewClientsByMonth = async () => {
 };
 
 module.exports = {
-  createClient,
   clientExists,
   updateClient,
   getNewClientsByMonth,

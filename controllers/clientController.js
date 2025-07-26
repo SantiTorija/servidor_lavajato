@@ -17,13 +17,10 @@ async function index(req, res) {
 }
 
 async function show(req, res) {
-  console.log("entre");
-
   try {
     //si hay un clinte lo devuelve, sino devuele false
-    const isClient = await clientExists(req.params.email);
-    console.log(isClient);
-    return res.json(isClient);
+    const result = await clientExists(req.params.email);
+    return res.json(result);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error.message });
