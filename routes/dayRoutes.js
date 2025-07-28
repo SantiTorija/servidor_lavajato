@@ -9,6 +9,20 @@ router.get("/", dayController.index);
 
 router.get("/availability/:year/:month", dayController.availability);
 
+// Nueva ruta para admin con rango de fechas (protegida)
+router.get(
+  "/availability-range",
+  authenticateToken,
+  dayController.availabilityByRange
+);
+
+// Nueva ruta para eventos procesados (optimizada para frontend)
+router.get(
+  "/processed-events-range",
+  authenticateToken,
+  dayController.processedEventsByRange
+);
+
 router.get("/dayAvailability/:date", dayController.dayAvailability);
 // Endpoint para eventos de calendario (FullCalendar)
 router.get("/calendar-events", authenticateToken, dayController.calendarEvents);

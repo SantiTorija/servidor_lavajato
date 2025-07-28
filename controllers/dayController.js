@@ -194,6 +194,63 @@ const dayController = {
         .json({ error: "Error al obtener eventos del calendario." });
     }
   },
+
+  // Obtener disponibilidad por rango de fechas (para admin)
+  async availabilityByRange(req, res) {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: "Se requieren los parámetros 'startDate' y 'endDate'",
+      });
+    }
+
+    try {
+      // Usar el servicio para obtener la disponibilidad
+      const days = await dayService.getAvailabilityByRange(startDate, endDate);
+      res.json(days);
+    } catch (error) {
+      console.error("Error fetching availability by range:", error);
+
+      // Manejar errores específicos del servicio
+      if (error.message.includes("Formato de fecha inválido")) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      res.status(500).json({ error: "Failed to fetch availability by range" });
+    }
+  },
+
+  // Obtener eventos procesados para un rango de fechas (optimizado)
+  async processedEventsByRange(req, res) {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: "Se requieren los parámetros 'startDate' y 'endDate'",
+      });
+    }
+
+    try {
+      // Usar el servicio para obtener eventos procesados
+      const events = await dayService.getProcessedEventsForRange(
+        startDate,
+        endDate
+      );
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching processed events by range:", error);
+
+      // Manejar errores específicos del servicio
+      if (error.message.includes("Formato de fecha inválido")) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      res
+        .status(500)
+        .json({ error: "Failed to fetch processed events by range" });
+    }
+  },
 };
 
 module.exports = dayController;
