@@ -122,7 +122,10 @@ const orderController = {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
 
+      // Liberar el slot
+      await findAndUpdate(req.params.date, req.params.slot);
       // Eliminar la orden
+
       const deleted = await Order.destroy({
         where: { id: req.params.id },
       });
@@ -130,9 +133,6 @@ const orderController = {
       if (!deleted) {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
-
-      // Liberar el slot
-      await findAndUpdate(req.params.date, req.params.slot);
 
       // Enviar email de cancelación
       try {
