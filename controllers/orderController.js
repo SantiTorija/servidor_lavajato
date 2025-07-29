@@ -122,8 +122,6 @@ const orderController = {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
 
-      // Liberar el slot
-      await findAndUpdate(req.params.date, req.params.slot);
       // Eliminar la orden
 
       const deleted = await Order.destroy({
@@ -133,6 +131,17 @@ const orderController = {
       if (!deleted) {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
+      // Log para debugging - datos recibidos para liberar slot
+      console.log("🗑️ BACKEND - Datos recibidos para liberar slot:", {
+        orderId: req.params.id,
+        date: req.params.date,
+        slot: req.params.slot,
+        dateType: typeof req.params.date,
+        slotType: typeof req.params.slot,
+      });
+
+      // Liberar el slot
+      await findAndUpdate(req.params.date, req.params.slot);
 
       // Enviar email de cancelación
       try {
