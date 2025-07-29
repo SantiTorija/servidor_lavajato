@@ -20,6 +20,16 @@ async function getByCarTypeId(carTypeId) {
   });
 }
 
+async function getByCarTypeAndService(carTypeId, serviceId) {
+  return ServicePrice.findOne({
+    where: {
+      CarTypeId: carTypeId,
+      ServiceId: serviceId,
+    },
+    include: [{ model: Service }, { model: CarType }],
+  });
+}
+
 async function getPricesByCarTypeName(carTypeName) {
   return ServicePrice.findAll({
     include: [
@@ -59,6 +69,7 @@ module.exports = {
   getAll,
   getById,
   getByCarTypeId,
+  getByCarTypeAndService,
   getPricesByCarTypeName,
   create,
   update,

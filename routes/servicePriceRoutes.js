@@ -9,6 +9,10 @@ router.get(
   servicePriceController.getByCarTypeName
 );
 router.get("/car-type/:carTypeId", servicePriceController.getByCarType);
+router.get(
+  "/car-type/:carTypeId/service/:serviceId",
+  servicePriceController.getByCarTypeAndService
+);
 router.get("/:id", servicePriceController.show);
 router.post("/", authenticateToken, servicePriceController.store);
 router.put("/:id", authenticateToken, servicePriceController.update);

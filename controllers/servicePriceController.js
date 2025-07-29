@@ -45,6 +45,28 @@ async function getByCarTypeName(req, res) {
   }
 }
 
+async function getByCarTypeAndService(req, res) {
+  try {
+    const { carTypeId, serviceId } = req.params;
+    const servicePrice = await servicePriceService.getByCarTypeAndService(
+      carTypeId,
+      serviceId
+    );
+
+    if (!servicePrice) {
+      return res.status(404).json({
+        message:
+          "No se encontró un precio para esta combinación de tipo de auto y servicio",
+      });
+    }
+
+    return res.json(servicePrice);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 async function store(req, res) {
   try {
     const servicePrice = await servicePriceService.create(req.body);
@@ -83,4 +105,5 @@ module.exports = {
   destroy,
   getByCarType,
   getByCarTypeName,
+  getByCarTypeAndService,
 };

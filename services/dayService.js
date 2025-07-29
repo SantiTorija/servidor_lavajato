@@ -458,11 +458,11 @@ async function getProcessedEventsForRange(startDate, endDate) {
         },
         {
           model: Service,
-          attributes: ["name"],
+          attributes: ["id", "name"],
         },
         {
           model: CarType,
-          attributes: ["name"],
+          attributes: ["id", "name"],
         },
       ],
     });
@@ -656,7 +656,9 @@ async function getProcessedEventsForRange(startDate, endDate) {
               event.cliente = cliente;
               event.vehiculo = vehiculo;
               event.servicio = order.Service.name;
+              event.serviceId = order.Service.id;
               event.tipoAuto = order.CarType.name;
+              event.carTypeId = order.CarType.id;
               event.total = order.cart.total;
               event.orderId = order.id;
             } else {
