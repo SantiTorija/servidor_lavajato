@@ -76,6 +76,66 @@ const orderController = {
     }
   },
 
+  // POST /orders/admin - Crear nueva orden desde admin (estructura completa)
+  async storeAdmin(req, res) {
+    try {
+      const {
+        email,
+        firstname,
+        lastname,
+        cart,
+        ClientId,
+        ServiceId,
+        CarTypeId,
+      } = req.body;
+
+      console.log("orderController.storeAdmin: datos recibidos", req.body);
+
+      // Validar que el cliente existe
+      const client = await Client.findOne({
+        where: { id: ClientId },
+      });
+
+      if (!client) {
+        return res.status(400).json({ error: "Cliente no encontrado" });
+      }
+
+      // Verificar que el slot esté disponible
+      const result = await findOrCreate(cart.date, cart.slot);
+      if (result && result.error) {
+        console.log(
+          "orderController.storeAdmin: error en findOrCreate",
+          result.error
+        );
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Crear la orden con todos los datos
+      const newOrder = await Order.create({
+        email,
+        firstname,
+        lastname,
+        cart,
+        ClientId,
+        ServiceId,
+        CarTypeId,
+      });
+
+      // Enviar email de confirmación
+      await confirmationEmail({
+        to: email,
+        date: cart.date,
+        time: cart.slot,
+        total: cart.total,
+      });
+
+      res.status(201).json(newOrder);
+    } catch (error) {
+      console.log("orderController.storeAdmin: error general", error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
   // PUT /orders/:id - Actualizar orden existente
   async update(req, res) {
     try {
