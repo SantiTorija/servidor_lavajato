@@ -75,6 +75,45 @@ const updateClient = async (clientId, updateData) => {
   }
 };
 
+const createClient = async (clientData) => {
+  try {
+    // Validar campos requeridos
+    if (!clientData.firstname || !clientData.lastname || !clientData.email) {
+      throw new Error("Los campos nombre, apellido y email son requeridos");
+    }
+
+    // Verificar si el email ya existe
+    const existingClient = await Client.findOne({
+      where: { email: clientData.email.trim() },
+    });
+
+    if (existingClient) {
+      throw new Error("Ya existe un cliente con este email");
+    }
+
+    // Preparar datos del carro
+    const carData = {
+      marca: clientData.marca || "",
+      modelo: clientData.modelo || "",
+      carType: clientData.carType || "",
+      carTypeId: clientData.carTypeId || null,
+    };
+
+    // Crear el cliente
+    const newClient = await Client.create({
+      firstname: clientData.firstname.trim(),
+      lastname: clientData.lastname.trim(),
+      email: clientData.email.trim(),
+      phone: clientData.phone || "",
+      car: carData,
+    });
+
+    return newClient;
+  } catch (error) {
+    throw new Error(`Error al crear cliente: ${error.message}`);
+  }
+};
+
 const getNewClientsByMonth = async () => {
   const now = new Date();
   const months = [];
@@ -122,6 +161,7 @@ const getNewClientsByMonth = async () => {
 
 module.exports = {
   clientExists,
+  createClient,
   updateClient,
   getNewClientsByMonth,
 };

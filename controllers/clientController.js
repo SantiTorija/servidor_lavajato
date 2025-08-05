@@ -79,11 +79,39 @@ async function update(req, res) {
 
 async function destroy(req, res) {
   try {
-    await Client.destroy({ where: { id: req.params.id } });
-    return res.json({ message: "destroyed" });
+    const clientId = req.params.id;
+
+    // Validar que el ID sea un número válido
+    if (!clientId || isNaN(clientId)) {
+      return res.status(400).json({
+        message: "ID de cliente inválido",
+      });
+    }
+
+    // Buscar el cliente antes de eliminarlo para verificar que existe
+    const client = await Client.findByPk(clientId);
+
+    if (!client) {
+      return res.status(404).json({
+        message: "Cliente no encontrado",
+      });
+    }
+
+    await Client.destroy({ where: { id: clientId } });
+
+    return res.json({
+      message: "Cliente eliminado exitosamente",
+      deletedClient: {
+        id: client.id,
+        firstname: client.firstname,
+        lastname: client.lastname,
+      },
+    });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: error.message });
+    console.log("Error en destroy:", error);
+    return res.status(500).json({
+      message: "Error interno del servidor al eliminar cliente",
+    });
   }
 }
 
