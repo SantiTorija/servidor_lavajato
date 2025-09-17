@@ -1,4 +1,4 @@
-const { Order, Day, Client } = require("../models");
+const { Order, Day, Client, Service, ServicePrice } = require("../models");
 const {
   isOrder,
   getOrdersByStatusAndEmail,
@@ -62,12 +62,12 @@ const orderController = {
 
       // Enviar email de confirmación
 
-      await confirmationEmail({
+      /* await confirmationEmail({
         to: client.email,
         date,
         time: slot,
         total: newOrder.cart.total,
-      });
+      }); */
 
       res.status(201).json(newOrder);
     } catch (error) {
@@ -121,14 +121,14 @@ const orderController = {
         CarTypeId,
       });
 
-      // Enviar email de confirmación
+      /*  // Enviar email de confirmación
       await confirmationEmail({
         to: email,
         date: cart.date,
         time: cart.slot,
         total: cart.total,
       });
-
+ */
       res.status(201).json(newOrder);
     } catch (error) {
       console.log("orderController.storeAdmin: error general", error);
@@ -139,32 +139,130 @@ const orderController = {
   // PUT /orders/:id - Actualizar orden existente
   async update(req, res) {
     try {
-      await findAndUpdate(req.query.dateToEdit, req.query.slotToEdit);
-      await findOrCreate(req.body.cart.date, req.body.cart.slot);
-      const [updated] = await Order.update(req.body, {
-        where: { id: req.params.id },
+      const orderId = req.params.id;
+
+      // Buscar orden existente para detectar cambios
+      const existingOrder = await Order.findByPk(orderId);
+      if (!existingOrder) {
+        return res.status(404).json({ message: "Orden no encontrada" });
+      }
+
+      const incomingCart = req.body?.cart;
+      const oldDate = existingOrder.cart?.date;
+      const oldSlot = existingOrder.cart?.slot;
+
+      const newDate = incomingCart?.date;
+      const newSlot = incomingCart?.slot;
+
+      // Detectar si hay cambios en fecha o slot
+      const dateChanged = typeof newDate !== "undefined" && newDate !== oldDate;
+      const slotChanged = typeof newSlot !== "undefined" && newSlot !== oldSlot;
+      const willChangeSchedule =
+        Boolean(incomingCart) && (dateChanged || slotChanged);
+
+      // Solo si cambia fecha/slot actualizamos las tablas de días
+      if (willChangeSchedule) {
+        if (oldDate && oldSlot) {
+          await findAndUpdate(oldDate, oldSlot);
+        }
+        if (newDate && newSlot) {
+          await findOrCreate(newDate, newSlot);
+        }
+      }
+
+      // Construir payload de actualización fusionando datos existentes con los entrantes
+      const updatePayload = {};
+
+      // Determinar ServiceId y CarTypeId finales
+      const finalServiceId =
+        typeof req.body?.ServiceId !== "undefined"
+          ? req.body.ServiceId
+          : existingOrder.ServiceId;
+      const finalCarTypeId =
+        typeof req.body?.CarTypeId !== "undefined"
+          ? req.body.CarTypeId
+          : existingOrder.CarTypeId;
+
+      if (typeof req.body?.ServiceId !== "undefined") {
+        updatePayload.ServiceId = finalServiceId;
+      }
+      if (typeof req.body?.CarTypeId !== "undefined") {
+        updatePayload.CarTypeId = finalCarTypeId;
+      }
+
+      // Empezar del cart existente y modificar solo lo necesario
+      let mergedCart = { ...(existingOrder.cart || {}) };
+
+      // Si cambió fecha/slot, reflejar en el cart
+      if (willChangeSchedule) {
+        if (typeof newDate !== "undefined") mergedCart.date = newDate;
+        if (typeof newSlot !== "undefined") mergedCart.slot = newSlot;
+      }
+
+      // Si cambia ServiceId/CarTypeId (o vienen explícitos), recalcular nombre de servicio y total
+      const serviceChanged = finalServiceId !== existingOrder.ServiceId;
+      const carTypeChanged = finalCarTypeId !== existingOrder.CarTypeId;
+      if (serviceChanged || carTypeChanged) {
+        // Actualizar nombre y serviceId en cart según ServiceId final
+        try {
+          const svc = await Service.findByPk(finalServiceId);
+          if (svc) {
+            mergedCart.service = svc.name;
+          }
+        } catch (_) {}
+        mergedCart.serviceId = finalServiceId;
+
+        // Recalcular total desde ServicePrice
+        try {
+          const sp = await ServicePrice.findOne({
+            where: { ServiceId: finalServiceId, CarTypeId: finalCarTypeId },
+          });
+          if (sp) {
+            mergedCart.total = sp.price;
+          }
+        } catch (_) {}
+      }
+
+      // Si el cliente envía campos adicionales en cart (distintos de date/slot), se fusionan de forma no destructiva
+      if (incomingCart) {
+        const { date: icDate, slot: icSlot, ...restCart } = incomingCart;
+        mergedCart = { ...mergedCart, ...restCart };
+      }
+
+      // Asignar cart solo si hay algún cambio efectivo respecto al existente
+      const cartStringOld = JSON.stringify(existingOrder.cart || {});
+      const cartStringNew = JSON.stringify(mergedCart || {});
+      if (cartStringOld !== cartStringNew) {
+        updatePayload.cart = mergedCart;
+      }
+
+      // Ejecutar actualización
+      const [updated] = await Order.update(updatePayload, {
+        where: { id: orderId },
       });
 
       if (!updated) {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
 
-      const updatedOrder = await Order.findByPk(req.params.id);
+      const updatedOrder = await Order.findByPk(orderId);
 
-      // Enviar email de modificación
-      try {
-        await modificationEmail({
-          to: updatedOrder.email,
-          oldDate: req.query.dateToEdit,
-          oldTime: req.query.slotToEdit,
-          newDate: req.body.cart.date,
-          newTime: req.body.cart.slot,
-          total: req.body.cart.total,
-        });
-        console.log("Email de modificación enviado exitosamente");
-      } catch (emailError) {
-        console.error("Error enviando email de modificación:", emailError);
-        // No fallar la operación principal si falla el email
+      // Enviar email de modificación SOLO si cambió fecha/slot
+      if (willChangeSchedule) {
+        try {
+          await modificationEmail({
+            to: updatedOrder.email,
+            oldDate,
+            oldTime: oldSlot,
+            newDate: updatedOrder.cart?.date,
+            newTime: updatedOrder.cart?.slot,
+            total: updatedOrder.cart?.total,
+          });
+          console.log("Email de modificación enviado exitosamente");
+        } catch (emailError) {
+          console.error("Error enviando email de modificación:", emailError);
+          // No fallar la operación principal si falla el email
+        }
       }
 
       res.status(200).json(updatedOrder);
