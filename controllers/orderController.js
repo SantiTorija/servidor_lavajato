@@ -62,12 +62,12 @@ const orderController = {
 
       // Enviar email de confirmación
 
-      /* await confirmationEmail({
+      await confirmationEmail({
         to: client.email,
         date,
         time: slot,
         total: newOrder.cart.total,
-      }); */
+      });
 
       res.status(201).json(newOrder);
     } catch (error) {
@@ -121,14 +121,14 @@ const orderController = {
         CarTypeId,
       });
 
-      /*  // Enviar email de confirmación
+      // Enviar email de confirmación
       await confirmationEmail({
         to: email,
         date: cart.date,
         time: cart.slot,
         total: cart.total,
       });
- */
+
       res.status(201).json(newOrder);
     } catch (error) {
       console.log("orderController.storeAdmin: error general", error);

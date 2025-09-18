@@ -1,7 +1,7 @@
-const sgMail = require("@sendgrid/mail");
+const { Resend } = require("resend");
 
-// Configura la API Key desde variables de entorno (recomendado)
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Inicializa Resend con la API Key desde variables de entorno
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Función para enviar email de confirmación de reserva
 const confirmationEmail = async ({ to, date, time, total }) => {
@@ -18,22 +18,23 @@ const confirmationEmail = async ({ to, date, time, total }) => {
     <h2>¡Muchas gracias por la confianza!</h2>
   `;
 
-  const msg = {
-    to, // destinatario
-    from: process.env.FROM_EMAIL, // remitente verificado en SendGrid
-    subject,
-    text,
-    html,
-  };
-
   try {
-    await sgMail.send(msg);
-    console.log("Correo enviado correctamente a", to);
+    const { data, error } = await resend.emails.send({
+      from: process.env.FROM_EMAIL, // remitente verificado en Resend
+      to: [to], // destinatario (array)
+      subject,
+      text,
+      html,
+    });
+
+    if (error) {
+      console.error("Error enviando email:", error);
+      throw new Error("No se pudo enviar el correo.");
+    }
+
+    console.log("Correo enviado correctamente a", to, "ID:", data.id);
   } catch (error) {
-    console.error(
-      "Error enviando email:",
-      error.response ? error.response.body : error
-    );
+    console.error("Error enviando email:", error);
     throw new Error("No se pudo enviar el correo.");
   }
 };
@@ -53,22 +54,28 @@ const cancellationEmail = async ({ to, date, time, total }) => {
    
   `;
 
-  const msg = {
-    to,
-    from: process.env.FROM_EMAIL,
-    subject,
-    text,
-    html,
-  };
-
   try {
-    await sgMail.send(msg);
-    console.log("Email de cancelación enviado correctamente a", to);
-  } catch (error) {
-    console.error(
-      "Error enviando email de cancelación:",
-      error.response ? error.response.body : error
+    const { data, error } = await resend.emails.send({
+      from: process.env.FROM_EMAIL,
+      to: [to],
+      subject,
+      text,
+      html,
+    });
+
+    if (error) {
+      console.error("Error enviando email de cancelación:", error);
+      throw new Error("No se pudo enviar el email de cancelación.");
+    }
+
+    console.log(
+      "Email de cancelación enviado correctamente a",
+      to,
+      "ID:",
+      data.id
     );
+  } catch (error) {
+    console.error("Error enviando email de cancelación:", error);
     throw new Error("No se pudo enviar el email de cancelación.");
   }
 };
@@ -96,22 +103,28 @@ const modificationEmail = async ({
     <h2>¡Gracias!</h2>
   `;
 
-  const msg = {
-    to,
-    from: process.env.FROM_EMAIL,
-    subject,
-    text,
-    html,
-  };
-
   try {
-    await sgMail.send(msg);
-    console.log("Email de modificación enviado correctamente a", to);
-  } catch (error) {
-    console.error(
-      "Error enviando email de modificación:",
-      error.response ? error.response.body : error
+    const { data, error } = await resend.emails.send({
+      from: process.env.FROM_EMAIL,
+      to: [to],
+      subject,
+      text,
+      html,
+    });
+
+    if (error) {
+      console.error("Error enviando email de modificación:", error);
+      throw new Error("No se pudo enviar el email de modificación.");
+    }
+
+    console.log(
+      "Email de modificación enviado correctamente a",
+      to,
+      "ID:",
+      data.id
     );
+  } catch (error) {
+    console.error("Error enviando email de modificación:", error);
     throw new Error("No se pudo enviar el email de modificación.");
   }
 };
