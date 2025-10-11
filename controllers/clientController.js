@@ -8,7 +8,46 @@ const {
 
 async function index(req, res) {
   try {
-    const clients = await Client.findAll();
+    const { search } = req.query;
+
+    let whereClause = {};
+
+    // Si hay un parámetro de búsqueda, agregar filtros
+    if (search && search.trim()) {
+      const { Op } = require("sequelize");
+      const searchTerm = search.trim();
+
+      whereClause = {
+        [Op.or]: [
+          {
+            firstname: {
+              [Op.like]: `%${searchTerm.toLowerCase()}%`,
+            },
+          },
+          {
+            lastname: {
+              [Op.like]: `%${searchTerm.toLowerCase()}%`,
+            },
+          },
+          {
+            email: {
+              [Op.like]: `%${searchTerm.toLowerCase()}%`,
+            },
+          },
+          {
+            phone: {
+              [Op.like]: `%${searchTerm.toLowerCase()}%`,
+            },
+          },
+        ],
+      };
+    }
+
+    const clients = await Client.findAll({
+      where: whereClause,
+      order: [["firstname", "ASC"]],
+    });
+
     return res.json(clients);
   } catch (error) {
     console.log(error);
