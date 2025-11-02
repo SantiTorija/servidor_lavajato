@@ -385,8 +385,16 @@ const orderController = {
       let errorCount = 0;
 
       // Enviar emails a cada cliente
-      for (const order of orders) {
+      for (let i = 0; i < orders.length; i++) {
+        const order = orders[i];
         console.log(order.cart.date, "fecha en carrito");
+
+        // Agregar delay entre envíos para respetar rate limit de Resend (2 req/seg)
+        // Esperamos 500ms después del primer email para mantener 2 req/seg máximo
+        if (i > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
         try {
           const cart = order.cart || {};
           const date = cart.date || tomorrowDate;
@@ -423,14 +431,23 @@ const orderController = {
         } catch (emailError) {
           console.error(
             `Error enviando email para orden ${order.id}:`,
-            emailError
+            emailError.message || emailError
           );
+          // Log detallado del error si es un objeto con más información
+          if (
+            emailError.name === "rate_limit_exceeded" ||
+            emailError.message?.includes("rate limit")
+          ) {
+            console.error(
+              "⚠️ Rate limit excedido - considerando aumentar delay entre envíos"
+            );
+          }
           errorCount++;
           results.push({
             orderId: order.id,
             email: order.email || "No especificado",
             status: "error",
-            message: emailError.message,
+            message: emailError.message || "Error desconocido al enviar email",
           });
         }
       }

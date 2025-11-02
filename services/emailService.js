@@ -270,7 +270,12 @@ const reserveNotification = async ({ to, date, time, nombre }) => {
 
     if (error) {
       console.error("Error enviando email de notificación:", error);
-      throw new Error("No se pudo enviar el email de notificación.");
+      // Preservar el error original de Resend para mejor debugging
+      const errorMessage =
+        error.message || "No se pudo enviar el email de notificación.";
+      const resendError = new Error(errorMessage);
+      resendError.name = error.name || "ResendError";
+      throw resendError;
     }
 
     console.log(
@@ -282,6 +287,10 @@ const reserveNotification = async ({ to, date, time, nombre }) => {
     return { success: true, emailId: data.id };
   } catch (error) {
     console.error("Error enviando email de notificación:", error);
+    // Preservar el error original si tiene información útil
+    if (error.name && error.message) {
+      throw error;
+    }
     throw new Error("No se pudo enviar el email de notificación.");
   }
 };
