@@ -3,7 +3,6 @@ const {
   createClient,
   clientExists,
   updateClient,
-  getNewClientsByMonth,
 } = require("../services/clientService");
 
 async function index(req, res) {
@@ -154,21 +153,10 @@ async function destroy(req, res) {
   }
 }
 
-async function newClientsByMonth(req, res) {
-  try {
-    const data = await getNewClientsByMonth();
-    return res.json(data);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: error.message });
-  }
-}
-
 module.exports = {
   index,
   show,
   store,
   update,
   destroy,
-  newClientsByMonth,
 };

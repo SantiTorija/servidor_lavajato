@@ -1,5 +1,6 @@
 const express = require("express");
 const adminRoutes = require("./adminRoutes");
+const analyticsRoutes = require("./analyticsRoutes");
 const carTypeRoutes = require("./carTypeRoutes");
 const clientRoutes = require("./clientRoutes");
 const dayRoutes = require("./dayRoutes");
@@ -13,6 +14,7 @@ const adminSeederRoutes = require("./adminSeeder");
 module.exports = (app) => {
   app.use("/admin", authRoutes);
   //app.use("/admin", adminRoutes);
+  app.use("/analytics", analyticsRoutes);
   app.use("/car-type", carTypeRoutes);
   app.use("/client", clientRoutes);
   app.use("/day", dayRoutes);
