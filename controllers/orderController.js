@@ -8,6 +8,8 @@ const {
   confirmationEmail,
   cancellationEmail,
   modificationEmail,
+  reserveNotification,
+  notificationReport,
 } = require("../services/emailService");
 
 const orderController = {
@@ -330,6 +332,158 @@ const orderController = {
       res.status(200).json(orders);
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  },
+
+  // POST /orders/reserve-notification - Enviar notificaciones de reservas
+  async reserveNotification(req, res) {
+    try {
+      const { formatInTimeZone } = require("date-fns-tz");
+      const { Op } = require("sequelize");
+
+      // Para pruebas: hardcodeamos la fecha 13 de octubre de 2025
+      //const tomorrowDate = "2025-11-03";
+
+      // En producción, usar esta lógica:
+      const now = new Date();
+      const uruguayTimeString = formatInTimeZone(
+        now,
+        "America/Montevideo",
+        "yyyy-MM-dd HH:mm:ss"
+      );
+      console.log("🕐 Hora local de Uruguay:", uruguayTimeString);
+
+      // Obtener la fecha de mañana en la zona horaria de Uruguay
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowDate = formatInTimeZone(
+        tomorrow,
+        "America/Montevideo",
+        "yyyy-MM-dd"
+      );
+
+      console.log("Buscando órdenes para la fecha:", tomorrowDate);
+
+      // Buscar órdenes del día de mañana
+      const orders = await Order.findAll({
+        where: {
+          "cart.date": tomorrowDate,
+        },
+      });
+
+      if (orders.length === 0) {
+        return res.status(200).json({
+          message: "No hay reservas para mañana",
+          count: 0,
+        });
+      }
+
+      console.log(`Encontradas ${orders.length} órdenes para notificar`);
+
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Enviar emails a cada cliente
+      for (const order of orders) {
+        console.log(order.cart.date, "fecha en carrito");
+        try {
+          const cart = order.cart || {};
+          const date = cart.date || tomorrowDate;
+          const time = cart.slot || "No especificado";
+          const nombre = order.firstname || "Cliente";
+          const email = order.email;
+
+          if (!email) {
+            console.warn(`Orden ${order.id} no tiene email, saltando...`);
+            errorCount++;
+            results.push({
+              orderId: order.id,
+              email: "No especificado",
+              status: "error",
+              message: "Email no especificado",
+            });
+            continue;
+          }
+
+          await reserveNotification({
+            to: email,
+            date: date,
+            time: time,
+            nombre: nombre,
+          });
+
+          successCount++;
+          results.push({
+            orderId: order.id,
+            email: email,
+            status: "success",
+            message: "Email enviado correctamente",
+          });
+        } catch (emailError) {
+          console.error(
+            `Error enviando email para orden ${order.id}:`,
+            emailError
+          );
+          errorCount++;
+          results.push({
+            orderId: order.id,
+            email: order.email || "No especificado",
+            status: "error",
+            message: emailError.message,
+          });
+        }
+      }
+
+      // Enviar reporte de notificaciones (no afecta la respuesta del endpoint)
+      try {
+        await notificationReport({
+          results,
+          successCount,
+          errorCount,
+          date: tomorrowDate,
+        });
+      } catch (reportError) {
+        console.error(
+          "Error enviando reporte de notificaciones (no crítico):",
+          reportError
+        );
+        // No relanzamos el error para no afectar la respuesta
+      }
+
+      // Respuesta final
+      if (errorCount === 0) {
+        return res.status(200).json({
+          message: "Emails enviados correctamente",
+          total: orders.length,
+          success: successCount,
+          errors: errorCount,
+          results: results,
+        });
+      } else if (successCount > 0) {
+        return res.status(207).json({
+          // 207 Multi-Status
+          message: "Algunos emails se enviaron correctamente",
+          total: orders.length,
+          success: successCount,
+          errors: errorCount,
+          results: results,
+        });
+      } else {
+        return res.status(500).json({
+          message: "Error enviando todos los emails",
+          total: orders.length,
+          success: successCount,
+          errors: errorCount,
+          results: results,
+        });
+      }
+    } catch (error) {
+      console.error("Error en reserveNotification:", error);
+      return res.status(500).json({
+        message: "Error interno del servidor",
+        error: error.message,
+      });
     }
   },
 };
