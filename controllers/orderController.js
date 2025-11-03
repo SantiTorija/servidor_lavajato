@@ -453,6 +453,9 @@ const orderController = {
       }
 
       // Enviar reporte de notificaciones (no afecta la respuesta del endpoint)
+      // Agregar delay antes del reporte para respetar rate limit de Resend (2 req/seg)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       try {
         await notificationReport({
           results,
