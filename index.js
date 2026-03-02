@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const routes = require("./routes");
 const dbInitialSetup = require("./dbInitialSetup");
+const configSeeder = require("./seeders/configSeeder");
 const app = express();
 const PORT = process.env.PORT;
 
@@ -19,6 +20,14 @@ app.get("/", (req, res) => {
   res.send("Hola desde el backend!");
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
+  try {
+    await configSeeder();
+  } catch (err) {
+    console.error(
+      "Error ejecutando configSeeder (verificar que la tabla configs exista):",
+      err.message,
+    );
+  }
 });

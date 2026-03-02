@@ -26,6 +26,7 @@ router.post("/admin", authenticateToken, orderController.storeAdmin);
 router.post("/:date/:slot/:email", orderController.store);
 router.post("/reserve-notification", orderController.reserveNotification);
 router.put("/:id", orderController.update);
+router.patch("/:id/status", authenticateToken, orderController.updateStatus);
 router.delete("/:id/:date/:slot", orderController.destroy);
 
 module.exports = router;

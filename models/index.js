@@ -31,6 +31,7 @@ const Order = require("./Order")(sequelize, Model, DataTypes);
 const Day = require("./Day")(sequelize, Model, DataTypes);
 const CarType = require("./CarType")(sequelize, Model, DataTypes);
 const ServicePrice = require("./ServicePrice")(sequelize, Model, DataTypes);
+const Config = require("./Config")(sequelize, Model, DataTypes);
 
 // Associations
 // Cliente - Orden
@@ -63,4 +64,5 @@ module.exports = {
   Day,
   CarType,
   ServicePrice,
+  Config,
 };

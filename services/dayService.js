@@ -444,12 +444,13 @@ async function getProcessedEventsForRange(startDate, endDate) {
     });
 
     console.log("🛒 Buscando órdenes en el rango...");
-    // Obtener órdenes para el rango de fechas
+    // Obtener órdenes para el rango de fechas (excluir canceladas)
     const orders = await Order.findAll({
       where: {
         "cart.date": {
           [Op.between]: [startDate, endDate],
         },
+        orderStatus: { [Op.ne]: "cancelada" },
       },
       include: [
         {
@@ -661,6 +662,7 @@ async function getProcessedEventsForRange(startDate, endDate) {
               event.carTypeId = order.CarType.id;
               event.total = order.cart.total;
               event.orderId = order.id;
+              event.orderStatus = order.orderStatus || "activa";
             } else {
               console.log(`      🔴 Sin orden → Reservado por Admin`);
               console.log(

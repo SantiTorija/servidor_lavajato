@@ -4,6 +4,7 @@ const {
   getOrdersByStatusAndEmail,
 } = require("../services/orderService");
 const { findOrCreate, findAndUpdate } = require("../services/dayService");
+const { getNoShowVetThreshold } = require("../services/configService");
 const {
   confirmationEmail,
   cancellationEmail,
@@ -59,6 +60,12 @@ const orderController = {
         return res.status(400).json({ error: "Cliente no encontrado" });
       }
 
+      if (client.clientStatus === "vetado") {
+        return res.status(403).json({
+          error: "Cliente vetado. No puede realizar reservas.",
+        });
+      }
+
       // Crear la orden agregando el clientId
       const newOrder = await Order.create({ ...req.body });
 
@@ -100,6 +107,12 @@ const orderController = {
 
       if (!client) {
         return res.status(400).json({ error: "Cliente no encontrado" });
+      }
+
+      if (client.clientStatus === "vetado") {
+        return res.status(403).json({
+          error: "Cliente vetado. No puede realizar reservas.",
+        });
       }
 
       // Verificar que el slot esté disponible
@@ -270,6 +283,62 @@ const orderController = {
       res.status(200).json(updatedOrder);
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  },
+
+  // PATCH /orders/:id/status - Actualizar estado de la orden
+  async updateStatus(req, res) {
+    try {
+      const orderId = req.params.id;
+      const { orderStatus } = req.body;
+
+      const validStatuses = [
+        "activa",
+        "completada",
+        "cancelada",
+        "faltó_sin_aviso",
+      ];
+      if (!orderStatus || !validStatuses.includes(orderStatus)) {
+        return res.status(400).json({
+          error: "orderStatus inválido. Debe ser: activa, completada, cancelada o faltó_sin_aviso",
+        });
+      }
+
+      const order = await Order.findByPk(orderId);
+      if (!order) {
+        return res.status(404).json({ message: "Orden no encontrada" });
+      }
+
+      const date = order.cart?.date;
+      const slot = order.cart?.slot;
+
+      if (orderStatus === "cancelada") {
+        if (date && slot) {
+          await findAndUpdate(date, slot);
+        }
+      }
+
+      if (orderStatus === "faltó_sin_aviso") {
+        const client = await Client.findByPk(order.ClientId);
+        if (client) {
+          await client.increment("noShowCount");
+          await client.reload();
+          const threshold = await getNoShowVetThreshold();
+          if (client.noShowCount >= threshold) {
+            await client.update({
+              clientStatus: "vetado",
+              statusReason: `Vetado automáticamente por ${client.noShowCount} faltas sin aviso`,
+            });
+          }
+        }
+      }
+
+      await order.update({ orderStatus });
+
+      res.status(200).json(order);
+    } catch (error) {
+      console.error("Error en updateStatus:", error);
+      res.status(500).json({ error: error.message });
     }
   },
 

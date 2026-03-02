@@ -27,6 +27,14 @@ module.exports = (sequelize) => {
         type: DataTypes.JSON,
         allowNull: false,
       },
+      orderStatus: {
+        type: DataTypes.STRING(30),
+        allowNull: false,
+        defaultValue: "activa",
+        validate: {
+          isIn: [["activa", "completada", "cancelada", "faltó_sin_aviso"]],
+        },
+      },
     },
     {
       tableName: "orders",

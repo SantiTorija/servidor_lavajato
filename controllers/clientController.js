@@ -7,7 +7,17 @@ const {
 
 async function index(req, res) {
   try {
-    const { search } = req.query;
+    const { search, page: pageParam, limit: limitParam } = req.query;
+
+    // Validar limit: solo 10, 20 o 50
+    const validLimits = [10, 20, 50];
+    const limit = validLimits.includes(Number(limitParam))
+      ? Number(limitParam)
+      : 10;
+
+    // Validar page: entero >= 1
+    const page = Math.max(1, parseInt(pageParam, 10) || 1);
+    const offset = (page - 1) * limit;
 
     let whereClause = {};
 
@@ -42,12 +52,22 @@ async function index(req, res) {
       };
     }
 
-    const clients = await Client.findAll({
+    const { count: total, rows: clients } = await Client.findAndCountAll({
       where: whereClause,
       order: [["firstname", "ASC"]],
+      limit,
+      offset,
     });
 
-    return res.json(clients);
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    return res.json({
+      clients,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error.message });

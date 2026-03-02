@@ -7,6 +7,9 @@ const router = express.Router();
 // Obtener todos los slots
 router.get("/", dayController.index);
 
+// Ruta pública para disponibilidad por rango (cliente/calendario) - debe ir antes de :year/:month
+router.get("/availability/range", dayController.availabilityByRange);
+
 router.get("/availability/:year/:month", dayController.availability);
 
 // Nueva ruta para admin con rango de fechas (protegida)

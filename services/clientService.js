@@ -6,10 +6,11 @@ const clientExists = async (email) => {
 
   if (!client) return false;
 
-  // Buscar todas las órdenes asociadas al cliente
+  // Buscar todas las órdenes asociadas al cliente (excluir canceladas)
   const allOrders = await Order.findAll({
     where: {
       ClientId: client.id,
+      orderStatus: { [Op.ne]: "cancelada" },
     },
   });
 
@@ -63,6 +64,13 @@ const updateClient = async (clientId, updateData) => {
         carType: updateData.carType || currentCar.carType,
         carTypeId: updateData.carTypeId || currentCar.carTypeId,
       };
+    }
+
+    if (updateData.clientStatus) {
+      updateFields.clientStatus = updateData.clientStatus;
+    }
+    if (updateData.statusReason !== undefined) {
+      updateFields.statusReason = updateData.statusReason;
     }
 
     // Actualizar el cliente

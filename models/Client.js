@@ -33,6 +33,23 @@ module.exports = (sequelize) => {
         type: DataTypes.JSON,
         required: true,
       },
+      noShowCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      clientStatus: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: "activo",
+        validate: {
+          isIn: [["activo", "inactivo", "vetado"]],
+        },
+      },
+      statusReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       tableName: "clients",

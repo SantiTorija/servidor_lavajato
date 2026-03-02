@@ -10,6 +10,8 @@ module.exports = async () => {
     await require("./seeders/carTypeSeeder")();
     await require("./seeders/serviceSeeder")();
     await require("./seeders/servicePriceSeeder")();
+    await require("./seeders/configSeeder")();
+    await require("./seeders/clientSeeder")();
     //await require("./seeders/generarDiasSeeder")();
 
     console.log("[Database] ¡Los datos de prueba fueron insertados!");
