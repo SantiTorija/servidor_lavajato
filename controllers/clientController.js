@@ -1,9 +1,18 @@
-const { Client } = require("../models");
+const { Client, sequelize } = require("../models");
+const { Op } = require("sequelize");
 const {
   createClient,
   clientExists,
   updateClient,
 } = require("../services/clientService");
+
+// Escapa % y _ para evitar que actúen como comodines en LIKE
+function escapeLike(str) {
+  return str
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
 
 async function index(req, res) {
   try {
@@ -23,31 +32,29 @@ async function index(req, res) {
 
     // Si hay un parámetro de búsqueda, agregar filtros
     if (search && search.trim()) {
-      const { Op } = require("sequelize");
-      const searchTerm = search.trim();
+      const searchTerm = search.trim().toLowerCase();
+      const pattern = `%${escapeLike(searchTerm)}%`;
 
+      // LOWER() en columna + patrón en minúsculas = búsqueda insensible a mayúsculas
+      // Funciona en PostgreSQL (Supabase), MySQL y SQLite
       whereClause = {
         [Op.or]: [
-          {
-            firstname: {
-              [Op.like]: `%${searchTerm.toLowerCase()}%`,
-            },
-          },
-          {
-            lastname: {
-              [Op.like]: `%${searchTerm.toLowerCase()}%`,
-            },
-          },
-          {
-            email: {
-              [Op.like]: `%${searchTerm.toLowerCase()}%`,
-            },
-          },
-          {
-            phone: {
-              [Op.like]: `%${searchTerm.toLowerCase()}%`,
-            },
-          },
+          sequelize.where(
+            sequelize.fn("LOWER", sequelize.col("firstname")),
+            { [Op.like]: pattern }
+          ),
+          sequelize.where(
+            sequelize.fn("LOWER", sequelize.col("lastname")),
+            { [Op.like]: pattern }
+          ),
+          sequelize.where(
+            sequelize.fn("LOWER", sequelize.col("email")),
+            { [Op.like]: pattern }
+          ),
+          sequelize.where(
+            sequelize.fn("LOWER", sequelize.col("phone")),
+            { [Op.like]: pattern }
+          ),
         ],
       };
     }
