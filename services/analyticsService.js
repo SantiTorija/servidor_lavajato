@@ -102,6 +102,7 @@ const getDashboardKPIs = async () => {
   const weekEndStr = toDateStr(weekEnd);
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
   const monthStartStr = toDateStr(monthStart);
 
   const orders = await Order.findAll({
@@ -129,9 +130,16 @@ const getDashboardKPIs = async () => {
     }
 
     if (order.orderStatus === "completada") {
-      const orderMonth = new Date(order.updatedAt || order.createdAt);
-      if (orderMonth >= monthStart) {
-        ingresosMes += total;
+      if (cartDate) {
+        const serviceDate = new Date(cartDate);
+        if (serviceDate >= monthStart && serviceDate <= monthEnd) {
+          ingresosMes += total;
+        }
+      } else {
+        const orderMonth = new Date(order.updatedAt || order.createdAt);
+        if (orderMonth >= monthStart) {
+          ingresosMes += total;
+        }
       }
     }
   }
@@ -166,7 +174,7 @@ const getDashboardKPIs = async () => {
 /**
  * Ingresos por mes (últimos 6 meses)
  * Toda orden completada cuenta como ingreso.
- * Agrupa por mes en que se marcó completada (updatedAt) o se creó (createdAt).
+ * Agrupa por fecha del servicio (cart.date). Si no hay cart.date, usa updatedAt/createdAt.
  */
 const getRevenueByMonth = async () => {
   const now = new Date();
@@ -185,7 +193,8 @@ const getRevenueByMonth = async () => {
 
     let total = 0;
     for (const o of orders) {
-      const orderDate = new Date(o.updatedAt || o.createdAt);
+      const cartDate = parseCartDate(o.cart) || (o.cart?.date && typeof o.cart.date === "string" ? o.cart.date.split("T")[0] : null);
+      const orderDate = cartDate ? new Date(cartDate) : new Date(o.updatedAt || o.createdAt);
       if (orderDate >= monthStart && orderDate <= monthEnd) {
         total += parseCartTotal(o.cart);
       }
